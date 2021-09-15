@@ -290,9 +290,9 @@ contract TokenTest is DSTest {
         assertEq(token.DOMAIN_SEPARATOR(), 0x69b40c6af83544db8ec1ac954155000210cb4089f6c3ae75fb6e8ba5487c62e8);
     }
 
+//    TODO Update data v, r, s
     function testPermit() public {
         assertEq(token.nonces(cal), 0);
-        assertEq(address(token), address(0));
         assertEq(token.allowance(cal, del), 0);
         token.permit(cal, del, 0, 0, true, v, r, s);
         assertEq(token.allowance(cal, del),uint(-1));
@@ -304,6 +304,7 @@ contract TokenTest is DSTest {
         token.permit(address(0), del, 0, 0, true, v, r, s);
     }
 
+    //    TODO Update data _v, _r, _s
     function testPermitWithExpiry() public {
         assertEq(now, 604411200);
         token.permit(cal, del, 0, 604411200 + 1 hours, true, _v, _r, _s);
