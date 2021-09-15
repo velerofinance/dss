@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-/// vat.sol -- Dai CDP database
+/// vat.sol -- USDV CDP database
 
 // Copyright (C) 2018 Rain <rainbreak@riseup.net>
 //
@@ -59,8 +59,8 @@ contract Vat {
     mapping (address => uint256)                   public dai;  // [rad]
     mapping (address => uint256)                   public sin;  // [rad]
 
-    uint256 public debt;  // Total Dai Issued    [rad]
-    uint256 public vice;  // Total Unbacked Dai  [rad]
+    uint256 public debt;  // Total USDV Issued    [rad]
+    uint256 public vice;  // Total Unbacked USDV  [rad]
     uint256 public Line;  // Total Debt Ceiling  [rad]
     uint256 public live;  // Active Flag
 

@@ -32,9 +32,9 @@ interface GemLike {
 }
 
 /*
-   This thing lets you sell some dai in return for gems.
+   This thing lets you sell some USDV in return for gems.
 
- - `lot` dai in return for bid
+ - `lot` USDV in return for bid
  - `bid` gems paid
  - `ttl` single bid lifetime
  - `beg` minimum bid increase
@@ -54,7 +54,7 @@ contract Flapper {
     // --- Data ---
     struct Bid {
         uint256 bid;  // gems paid               [wad]
-        uint256 lot;  // dai in return for bid   [rad]
+        uint256 lot;  // USDV in return for bid   [rad]
         address guy;  // high bidder
         uint48  tic;  // bid expiry time         [unix epoch time]
         uint48  end;  // auction expiry time     [unix epoch time]

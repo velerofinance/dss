@@ -9,7 +9,7 @@ import "ds-value/value.sol";
 import {Vat}     from "../vat.sol";
 import {Spotter} from "../spot.sol";
 import {Vow}     from "../vow.sol";
-import {GemJoin, DaiJoin} from "../join.sol";
+import {GemJoin, USDVJoin} from "../join.sol";
 
 import {Clipper} from "../clip.sol";
 import "../abaci.sol";
@@ -23,19 +23,19 @@ interface Hevm {
 contract Exchange {
 
     DSToken gold;
-    DSToken dai;
+    DSToken usdv;
     uint256 goldPrice;
 
-    constructor(DSToken gold_, DSToken dai_, uint256 goldPrice_) public {
+    constructor(DSToken gold_, DSToken usdv_, uint256 goldPrice_) public {
         gold = gold_;
-        dai = dai_;
+        usdv = usdv_;
         goldPrice = goldPrice_;
     }
 
     function sellGold(uint256 goldAmt) external {
         gold.transferFrom(msg.sender, address(this), goldAmt);
-        uint256 daiAmt = goldAmt * goldPrice / 1E18;
-        dai.transfer(msg.sender, daiAmt);
+        uint256 usdvAmt = goldAmt * goldPrice / 1E18;
+        usdv.transfer(msg.sender, usdvAmt);
     }
 }
 
@@ -45,8 +45,8 @@ contract Trader {
     Vat vat;
     DSToken gold;
     GemJoin goldJoin;
-    DSToken dai;
-    DaiJoin daiJoin;
+    DSToken usdv;
+    USDVJoin usdvJoin;
     Exchange exchange;
 
     constructor(
@@ -54,16 +54,16 @@ contract Trader {
         Vat vat_,
         DSToken gold_,
         GemJoin goldJoin_,
-        DSToken dai_,
-        DaiJoin daiJoin_,
+        DSToken usdv_,
+        USDVJoin usdvJoin_,
         Exchange exchange_
     ) public {
         clip = clip_;
         vat = vat_;
         gold = gold_;
         goldJoin = goldJoin_;
-        dai = dai_;
-        daiJoin = daiJoin_;
+        usdv = usdv_;
+        usdvJoin = usdvJoin_;
         exchange = exchange_;
     }
 
@@ -91,9 +91,9 @@ contract Trader {
         goldJoin.exit(address(this), slice);
         gold.approve(address(exchange));
         exchange.sellGold(slice);
-        dai.approve(address(daiJoin));
+        usdv.approve(address(usdvJoin));
         vat.hope(address(clip));
-        daiJoin.join(sender, owe / 1E27);
+        usdvJoin.join(sender, owe / 1E27);
     }
 }
 
@@ -233,8 +233,8 @@ contract ClipperTest is DSTest {
     DSValue pip;
     DSToken gold;
     GemJoin goldJoin;
-    DSToken dai;
-    DaiJoin daiJoin;
+    DSToken usdv;
+    USDVJoin usdvJoin;
 
     Clipper clip;
 
@@ -343,14 +343,14 @@ contract ClipperTest is DSTest {
         gold = new DSToken("GLD");
         goldJoin = new GemJoin(address(vat), ilk, address(gold));
         vat.rely(address(goldJoin));
-        dai = new DSToken("DAI");
-        daiJoin = new DaiJoin(address(vat), address(dai));
-        vat.suck(address(0), address(daiJoin), rad(1000 ether));
-        exchange = new Exchange(gold, dai, goldPrice * 11 / 10);
+        usdv = new DSToken("USDV");
+        usdvJoin = new USDVJoin(address(vat), address(usdv));
+        vat.suck(address(0), address(usdvJoin), rad(1000 ether));
+        exchange = new Exchange(gold, usdv, goldPrice * 11 / 10);
 
-        dai.mint(1000 ether);
-        dai.transfer(address(exchange), 1000 ether);
-        dai.setOwner(address(daiJoin));
+        usdv.mint(1000 ether);
+        usdv.transfer(address(exchange), 1000 ether);
+        usdv.setOwner(address(usdvJoin));
         gold.mint(1000 ether);
         gold.transfer(address(goldJoin), 1000 ether);
 
@@ -398,7 +398,7 @@ contract ClipperTest is DSTest {
 
         ali = address(new Guy(clip));
         bob = address(new Guy(clip));
-        che = address(new Trader(clip, vat, gold, goldJoin, dai, daiJoin, exchange));
+        che = address(new Trader(clip, vat, gold, goldJoin, usdv, usdvJoin, exchange));
 
         vat.hope(address(clip));
         Guy(ali).hope(address(clip));
@@ -431,7 +431,7 @@ contract ClipperTest is DSTest {
         uint256 ink;
         uint256 art;
 
-        clip.file("tip",  rad(100 ether)); // Flat fee of 100 DAI
+        clip.file("tip",  rad(100 ether)); // Flat fee of 100 USDV
         clip.file("chip", 0);              // No linear increase
 
         assertEq(clip.kicks(), 0);
@@ -459,7 +459,7 @@ contract ClipperTest is DSTest {
         assertEq(uint256(tic), now);
         assertEq(top, ray(4 ether));
         assertEq(vat.gem(ilk, me), 960 ether);
-        assertEq(vat.dai(ali), rad(1100 ether)); // Paid "tip" amount of DAI for calling bark()
+        assertEq(vat.dai(ali), rad(1100 ether)); // Paid "tip" amount of USDV for calling bark()
         (ink, art) = vat.urns(ilk, me);
         assertEq(ink, 0 ether);
         assertEq(art, 0 ether);
@@ -484,7 +484,7 @@ contract ClipperTest is DSTest {
 
         clip.file(bytes32("buf"),  ray(1.25 ether)); // 25% Initial price buffer
 
-        clip.file("tip",  rad(100 ether)); // Flat fee of 100 DAI
+        clip.file("tip",  rad(100 ether)); // Flat fee of 100 USDV
         clip.file("chip", 0.02 ether);     // Linear increase of 2% of tab
 
         assertEq(vat.dai(bob), rad(1000 ether));
@@ -504,7 +504,7 @@ contract ClipperTest is DSTest {
         assertEq(ink, 0 ether);
         assertEq(art, 0 ether);
 
-        assertEq(vat.dai(bob), rad(1000 ether) + rad(100 ether) + tab * 0.02 ether / WAD); // Paid (tip + due * chip) amount of DAI for calling bark()
+        assertEq(vat.dai(bob), rad(1000 ether) + rad(100 ether) + tab * 0.02 ether / WAD); // Paid (tip + due * chip) amount of USDV for calling bark()
     }
 
     function testFail_kick_zero_price() public {
@@ -649,7 +649,7 @@ contract ClipperTest is DSTest {
 
         dog.file(ilk, "hole", 100 * RAD);   // Makes room = 100 RAD
         dog.file(ilk, "chop",   1 ether);   // 0% chop for precise calculations
-        vat.file(ilk, "dust",  20 * RAD);   // 20 DAI minimum Vault debt
+        vat.file(ilk, "dust",  20 * RAD);   // 20 USDV minimum Vault debt
         clip.upchost();
 
         assertEq(clip.kicks(), 0);
@@ -663,7 +663,7 @@ contract ClipperTest is DSTest {
         assertEq(vat.gem(ilk, me), 960 ether);
         (ink, art) = vat.urns(ilk, me);
         assertEq(ink, 40 ether);
-        assertEq(art, 100 ether);  // Full debt is 102 DAI since rate = 1.02 * RAY
+        assertEq(art, 100 ether);  // Full debt is 102 USDV since rate = 1.02 * RAY
 
         // (art - dart) * rate ~= 2 RAD < dust = 20 RAD
         //   => remnant would be dusty, so a full liquidation occurs.
@@ -699,7 +699,7 @@ contract ClipperTest is DSTest {
 
         dog.file(ilk, "hole", 816 * RAD / 10);  // Makes room = 81.6 RAD => dart = 80
         dog.file(ilk, "chop",   1 ether);       // 0% chop for precise calculations
-        vat.file(ilk, "dust", 204 * RAD / 10);  // 20.4 DAI dust
+        vat.file(ilk, "dust", 204 * RAD / 10);  // 20.4 USDV dust
         clip.upchost();
 
         assertEq(clip.kicks(), 0);
@@ -991,7 +991,7 @@ contract ClipperTest is DSTest {
         // to leave tab == chost post-execution.
         Guy(ali).take({
             id:  1,
-            amt: 18 * WAD,  // Costs 90 DAI at current price; 110 - 90 == 20 < 22 == chost
+            amt: 18 * WAD,  // Costs 90 USDV at current price; 110 - 90 == 20 < 22 == chost
             max: ray(5 ether),
             who: address(ali),
             data: ""
@@ -1356,7 +1356,7 @@ contract ClipperTest is DSTest {
     }
 
     function test_redo_incentive() public takeSetup {
-        clip.file("tip",  rad(100 ether)); // Flat fee of 100 DAI
+        clip.file("tip",  rad(100 ether)); // Flat fee of 100 USDV
         clip.file("chip", 0);              // No linear increase
 
         (, uint256 tab, uint256 lot,,,) = clip.sales(1);
@@ -1378,7 +1378,7 @@ contract ClipperTest is DSTest {
         clip.redo(1, address(345));
         assertEq(vat.dai(address(345)), clip.chip() * tab / WAD);
 
-        vat.file(ilk, "dust", rad(100 ether) + 1); // ensure wmul(dust, chop) > 110 DAI (tab)
+        vat.file(ilk, "dust", rad(100 ether) + 1); // ensure wmul(dust, chop) > 110 USDV (tab)
         clip.upchost();
         assertEq(clip.chost(), 110 * RAD + 1);
 
@@ -1406,7 +1406,7 @@ contract ClipperTest is DSTest {
 
         (, tab, lot,,,) = clip.sales(1);
 
-        assertEq(tab, rad(110 ether) - 38 ether * price); // > 22 DAI chost
+        assertEq(tab, rad(110 ether) - 38 ether * price); // > 22 USDV chost
         // When auction is reset the current price of lot
         // is calculated from oracle price ($4) to see if dusty
         assertEq(lot, 2 ether); // (2 * $4) < $20 quivalent (dusty collateral)
@@ -1528,7 +1528,7 @@ contract ClipperTest is DSTest {
 
     function test_flashsale() public takeSetup {
         assertEq(vat.dai(che), 0);
-        assertEq(dai.balanceOf(che), 0);
+        assertEq(usdv.balanceOf(che), 0);
         Guy(che).take({
             id:  1,
             amt: 25 ether,
@@ -1537,7 +1537,7 @@ contract ClipperTest is DSTest {
             data: "hey"
         });
         assertEq(vat.dai(che), 0);
-        assertTrue(dai.balanceOf(che) > 0); // Che turned a profit
+        assertTrue(usdv.balanceOf(che) > 0); // Che turned a profit
     }
 
     function testFail_reentrancy_take() public takeSetup {

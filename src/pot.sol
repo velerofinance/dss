@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-/// pot.sol -- Dai Savings Rate
+/// pot.sol -- USDV Savings Rate
 
 // Copyright (C) 2018 Rain <rainbreak@riseup.net>
 //
@@ -24,20 +24,20 @@ pragma solidity >=0.5.12;
 // New deployments of this contract will need to include custom events (TO DO).
 
 /*
-   "Savings Dai" is obtained when Dai is deposited into
-   this contract. Each "Savings Dai" accrues Dai interest
-   at the "Dai Savings Rate".
+   "Savings USDV" is obtained when USDV is deposited into
+   this contract. Each "Savings USDV" accrues USDV interest
+   at the "USDV Savings Rate".
 
    This contract does not implement a user tradeable token
    and is intended to be used with adapters.
 
-         --- `save` your `dai` in the `pot` ---
+         --- `save` your `USDV` in the `pot` ---
 
-   - `dsr`: the Dai Savings Rate
-   - `pie`: user balance of Savings Dai
+   - `dsr`: the USDV Savings Rate
+   - `pie`: user balance of Savings USDV
 
-   - `join`: start saving some dai
-   - `exit`: remove some dai
+   - `join`: start saving some USDV
+   - `exit`: remove some USDV
    - `drip`: perform rate collection
 
 */
@@ -58,10 +58,10 @@ contract Pot {
     }
 
     // --- Data ---
-    mapping (address => uint256) public pie;  // Normalised Savings Dai [wad]
+    mapping (address => uint256) public pie;  // Normalised Savings USDV [wad]
 
-    uint256 public Pie;   // Total Normalised Savings Dai  [wad]
-    uint256 public dsr;   // The Dai Savings Rate          [ray]
+    uint256 public Pie;   // Total Normalised Savings USDV  [wad]
+    uint256 public dsr;   // The USDV Savings Rate          [ray]
     uint256 public chi;   // The Rate Accumulator          [ray]
 
     VatLike public vat;   // CDP Engine
@@ -150,7 +150,7 @@ contract Pot {
         vat.suck(address(vow), address(this), mul(Pie, chi_));
     }
 
-    // --- Savings Dai Management ---
+    // --- Savings USDV Management ---
     function join(uint wad) external {
         require(now == rho, "Pot/rho-not-updated");
         pie[msg.sender] = add(pie[msg.sender], wad);

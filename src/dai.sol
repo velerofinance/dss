@@ -21,19 +21,19 @@ pragma solidity >=0.5.12;
 // It doesn't use LibNote anymore.
 // New deployments of this contract will need to include custom events (TO DO).
 
-contract Dai {
+contract Token {
     // --- Auth ---
     mapping (address => uint) public wards;
     function rely(address guy) external auth { wards[guy] = 1; }
     function deny(address guy) external auth { wards[guy] = 0; }
     modifier auth {
-        require(wards[msg.sender] == 1, "Dai/not-authorized");
+        require(wards[msg.sender] == 1, "USDV/not-authorized");
         _;
     }
 
     // --- ERC20 Data ---
-    string  public constant name     = "Dai Stablecoin";
-    string  public constant symbol   = "DAI";
+    string  public constant name     = "USD Velero Stablecoin";
+    string  public constant symbol   = "USDV";
     string  public constant version  = "1";
     uint8   public constant decimals = 18;
     uint256 public totalSupply;
@@ -55,7 +55,7 @@ contract Dai {
 
     // --- EIP712 niceties ---
     bytes32 public DOMAIN_SEPARATOR;
-    // bytes32 public constant PERMIT_TYPEHASH = keccak256("Permit(address holder,address spender,uint256 nonce,uint256 expiry,bool allowed)");
+//     bytes32 public constant PERMIT_TYPEHASH = keccak256("Permit(address holder,address spender,uint256 nonce,uint256 expiry,bool allowed)");
     bytes32 public constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
 
     constructor(uint256 chainId_) public {
@@ -76,9 +76,9 @@ contract Dai {
     function transferFrom(address src, address dst, uint wad)
         public returns (bool)
     {
-        require(balanceOf[src] >= wad, "Dai/insufficient-balance");
+        require(balanceOf[src] >= wad, "USDV/insufficient-balance");
         if (src != msg.sender && allowance[src][msg.sender] != uint(-1)) {
-            require(allowance[src][msg.sender] >= wad, "Dai/insufficient-allowance");
+            require(allowance[src][msg.sender] >= wad, "USDV/insufficient-allowance");
             allowance[src][msg.sender] = sub(allowance[src][msg.sender], wad);
         }
         balanceOf[src] = sub(balanceOf[src], wad);
@@ -92,9 +92,9 @@ contract Dai {
         emit Transfer(address(0), usr, wad);
     }
     function burn(address usr, uint wad) external {
-        require(balanceOf[usr] >= wad, "Dai/insufficient-balance");
+        require(balanceOf[usr] >= wad, "USDV/insufficient-balance");
         if (usr != msg.sender && allowance[usr][msg.sender] != uint(-1)) {
-            require(allowance[usr][msg.sender] >= wad, "Dai/insufficient-allowance");
+            require(allowance[usr][msg.sender] >= wad, "USDV/insufficient-allowance");
             allowance[usr][msg.sender] = sub(allowance[usr][msg.sender], wad);
         }
         balanceOf[usr] = sub(balanceOf[usr], wad);
@@ -134,10 +134,10 @@ contract Dai {
                                      allowed))
         ));
 
-        require(holder != address(0), "Dai/invalid-address-0");
-        require(holder == ecrecover(digest, v, r, s), "Dai/invalid-permit");
-        require(expiry == 0 || now <= expiry, "Dai/permit-expired");
-        require(nonce == nonces[holder]++, "Dai/invalid-nonce");
+        require(holder != address(0), "USDV/invalid-address-0");
+        require(holder == ecrecover(digest, v, r, s), "USDV/invalid-permit");
+        require(expiry == 0 || now <= expiry, "USDV/permit-expired");
+        require(nonce == nonces[holder]++, "USDV/invalid-nonce");
         uint wad = allowed ? uint(-1) : 0;
         allowance[holder][spender] = wad;
         emit Approval(holder, spender, wad);

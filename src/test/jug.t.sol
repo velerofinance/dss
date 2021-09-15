@@ -69,13 +69,13 @@ contract JugTest is DSTest {
 
         draw("i", 100 ether);
     }
-    function draw(bytes32 ilk, uint dai) internal {
-        vat.file("Line", vat.Line() + rad(dai));
-        vat.file(ilk, "line", line(ilk) + rad(dai));
+    function draw(bytes32 ilk, uint usdv) internal {
+        vat.file("Line", vat.Line() + rad(usdv));
+        vat.file(ilk, "line", line(ilk) + rad(usdv));
         vat.file(ilk, "spot", 10 ** 27 * 10000 ether);
         address self = address(this);
         vat.slip(ilk, self,  10 ** 27 * 1 ether);
-        vat.frob(ilk, self, self, self, int(1 ether), int(dai));
+        vat.frob(ilk, self, self, self, int(1 ether), int(usdv));
     }
 
     function test_drip_setup() public {

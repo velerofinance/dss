@@ -225,7 +225,7 @@ contract FlopTest is DSTest {
     }
 
     function test_yank() public {
-        // yanking the auction should refund the last bidder's dai, credit a
+        // yanking the auction should refund the last bidder's usdv, credit a
         // corresponding amount of sin to the caller of cage, and delete the auction.
         // in practice, gal == (caller of cage) == (vow address)
         uint id = Gal(gal).kick(flop, /*lot*/ 200 ether, /*bid*/ 10 ether);
@@ -240,7 +240,7 @@ contract FlopTest is DSTest {
         Guy(bob).dent(id, 80 ether, 10 ether);
 
         // confirm the proper state updates have occurred
-        assertEq(vat.dai(ali), 200 ether);  // ali's dai balance is unchanged
+        assertEq(vat.dai(ali), 200 ether);  // ali's usdv balance is unchanged
         assertEq(vat.dai(bob), 190 ether);
         assertEq(vat.dai(gal),  10 ether);
         assertEq(vat.sin(address(this)), 1000 ether);
@@ -263,7 +263,7 @@ contract FlopTest is DSTest {
 
     function test_yank_no_bids() public {
         // with no bidder to refund, yanking the auction should simply create equal
-        // amounts of dai (credited to the gal) and sin (credited to the caller of cage)
+        // amounts of usdv (credited to the gal) and sin (credited to the caller of cage)
         // in practice, gal == (caller of cage) == (vow address)
         uint id = Gal(gal).kick(flop, /*lot*/ 200 ether, /*bid*/ 10 ether);
 

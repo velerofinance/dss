@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-/// vow.sol -- Dai settlement module
+/// vow.sol -- USDV settlement module
 
 // Copyright (C) 2018 Rain <rainbreak@riseup.net>
 //
@@ -36,7 +36,7 @@ interface FlapLike {
 }
 
 interface VatLike {
-    function dai (address) external view returns (uint);
+    function dai (address) external view returns (uint);  // TODO
     function sin (address) external view returns (uint);
     function heal(uint256) external;
     function hope(address) external;

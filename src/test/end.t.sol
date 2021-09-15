@@ -285,7 +285,7 @@ contract EndTest is DSTest {
         address urn1 = address(ali);
         gold.gemA.join(urn1, 10 ether);
         ali.frob("gold", urn1, urn1, urn1, 10 ether, 15 ether);
-        // ali's urn has 0 gem, 10 ink, 15 tab, 15 dai
+        // ali's urn has 0 gem, 10 ink, 15 tab, 15 usdv
 
         // global checks:
         assertEq(vat.debt(), rad(15 ether));
@@ -317,7 +317,7 @@ contract EndTest is DSTest {
         end.flow("gold");
         assertTrue(end.fix("gold") != 0);
 
-        // dai redemption
+        // usdv redemption
         ali.hope(address(end));
         ali.pack(15 ether);
         vow.heal(rad(15 ether));
@@ -349,13 +349,13 @@ contract EndTest is DSTest {
         address urn1 = address(ali);
         gold.gemA.join(urn1, 10 ether);
         ali.frob("gold", urn1, urn1, urn1, 10 ether, 15 ether);
-        // ali's urn has 0 gem, 10 ink, 15 tab, 15 dai
+        // ali's urn has 0 gem, 10 ink, 15 tab, 15 usdv
 
         // make a second CDP:
         address urn2 = address(bob);
         gold.gemA.join(urn2, 1 ether);
         bob.frob("gold", urn2, urn2, urn2, 1 ether, 3 ether);
-        // bob's urn has 0 gem, 1 ink, 3 tab, 3 dai
+        // bob's urn has 0 gem, 1 ink, 3 tab, 3 usdv
 
         // global checks:
         assertEq(vat.debt(), rad(18 ether));
@@ -390,7 +390,7 @@ contract EndTest is DSTest {
         end.flow("gold");
         assertTrue(end.fix("gold") != 0);
 
-        // first dai redemption
+        // first usdv redemption
         ali.hope(address(end));
         ali.pack(15 ether);
         vow.heal(rad(15 ether));
@@ -407,7 +407,7 @@ contract EndTest is DSTest {
         assertEq(gem("gold", urn1), rmul(fix, 15 ether));
         ali.exit(gold.gemA, address(this), rmul(fix, 15 ether));
 
-        // second dai redemption
+        // second usdv redemption
         bob.hope(address(end));
         bob.pack(3 ether);
         vow.heal(rad(3 ether));
@@ -439,17 +439,17 @@ contract EndTest is DSTest {
         address urn1 = address(ali);
         gold.gemA.join(urn1, 10 ether);
         ali.frob("gold", urn1, urn1, urn1, 10 ether, 15 ether);
-        // this urn has 0 gem, 10 ink, 15 tab, 15 dai
+        // this urn has 0 gem, 10 ink, 15 tab, 15 usdv
 
         vat.file("gold", "spot", ray(1 ether));     // now unsafe
 
         uint auction = cat.bite("gold", urn1);  // CDP liquidated
         assertEq(vat.vice(), rad(15 ether));    // now there is sin
-        // get 1 dai from ali
+        // get 1 usdv from ali
         ali.move(address(ali), address(this), rad(1 ether));
         vat.hope(address(gold.flip));
         (,uint lot,,,,,,) = gold.flip.bids(auction);
-        gold.flip.tend(auction, lot, rad(1 ether)); // bid 1 dai
+        gold.flip.tend(auction, lot, rad(1 ether)); // bid 1 usdv
         assertEq(dai(urn1), 14 ether);
 
         // collateral price is 5
@@ -459,7 +459,7 @@ contract EndTest is DSTest {
 
         end.skip("gold", auction);
         assertEq(dai(address(this)), 1 ether);       // bid refunded
-        vat.move(address(this), urn1, rad(1 ether)); // return 1 dai to ali
+        vat.move(address(this), urn1, rad(1 ether)); // return 1 usdv to ali
 
         end.skim("gold", urn1);
 
@@ -485,7 +485,7 @@ contract EndTest is DSTest {
         end.flow("gold");
         assertTrue(end.fix("gold") != 0);
 
-        // dai redemption
+        // usdv redemption
         ali.hope(address(end));
         ali.pack(15 ether);
         vow.heal(rad(15 ether));
@@ -559,7 +559,7 @@ contract EndTest is DSTest {
         spot.poke("gold");
         end.cage();
         end.cage("gold");
-        assertEq(end.tag("gold"), ray(0.2 ether)); // par / price = collateral per DAI
+        assertEq(end.tag("gold"), ray(0.2 ether)); // par / price = collateral per USDV
 
         assertEq(vat.gem("gold", address(gold.clip)), lot1); // From grab in dog.bark()
         assertEq(vat.sin(address(vow)),        art1 * rate); // From grab in dog.bark()
@@ -610,8 +610,8 @@ contract EndTest is DSTest {
         address urn1 = address(ali);
         gold.gemA.join(urn1, 10 ether);
         ali.frob("gold", urn1, urn1, urn1, 10 ether, 15 ether);
-        // ali's urn has 0 gem, 10 ink, 15 tab, 15 dai
-        // suck 1 dai and give to ali
+        // ali's urn has 0 gem, 10 ink, 15 tab, 15 usdv
+        // suck 1 usdv and give to ali
         vat.suck(address(vow), address(ali), rad(1 ether));
 
         // global checks:
@@ -644,7 +644,7 @@ contract EndTest is DSTest {
         end.flow("gold");
         assertTrue(end.fix("gold") != 0);
 
-        // dai redemption
+        // usdv redemption
         ali.hope(address(end));
         ali.pack(16 ether);
         vow.heal(rad(16 ether));
@@ -677,15 +677,15 @@ contract EndTest is DSTest {
         address urn1 = address(ali);
         gold.gemA.join(urn1, 10 ether);
         ali.frob("gold", urn1, urn1, urn1, 10 ether, 15 ether);
-        // ali's urn has 0 gem, 10 ink, 15 tab, 15 dai
-        // alive gives one dai to the vow, creating surplus
+        // ali's urn has 0 gem, 10 ink, 15 tab, 15 usdv
+        // alive gives one usdv to the vow, creating surplus
         ali.move(address(ali), address(vow), rad(1 ether));
 
         // make a second CDP:
         address urn2 = address(bob);
         gold.gemA.join(urn2, 1 ether);
         bob.frob("gold", urn2, urn2, urn2, 1 ether, 3 ether);
-        // bob's urn has 0 gem, 1 ink, 3 tab, 3 dai
+        // bob's urn has 0 gem, 1 ink, 3 tab, 3 usdv
 
         // global checks:
         assertEq(vat.debt(), rad(18 ether));
@@ -722,7 +722,7 @@ contract EndTest is DSTest {
         end.flow("gold");
         assertTrue(end.fix("gold") != 0);
 
-        // first dai redemption
+        // first usdv redemption
         ali.hope(address(end));
         ali.pack(14 ether);
         vow.heal(rad(14 ether));
@@ -739,7 +739,7 @@ contract EndTest is DSTest {
         assertEq(gem("gold", urn1), rmul(fix, 14 ether));
         ali.exit(gold.gemA, address(this), rmul(fix, 14 ether));
 
-        // second dai redemption
+        // second usdv redemption
         bob.hope(address(end));
         bob.pack(3 ether);
         vow.heal(rad(3 ether));
@@ -784,9 +784,9 @@ contract EndTest is DSTest {
         // bob's urn has 0 gem, 1 ink, 5 tab
 
         gold.pip.poke(bytes32(2 * WAD));
-        // urn1 has 20 dai of ink and 15 dai of tab
+        // urn1 has 20 usdv of ink and 15 usdv of tab
         coal.pip.poke(bytes32(2 * WAD));
-        // urn2 has 2 dai of ink and 5 dai of tab
+        // urn2 has 2 usdv of ink and 5 usdv of tab
         end.cage();
         end.cage("gold");
         end.cage("coal");
@@ -812,10 +812,10 @@ contract EndTest is DSTest {
         assertEq(end.gap("coal"),  1.5 ether);
 
         // there are 7.5 gold and 1 coal
-        // the gold is worth 15 dai and the coal is worth 2 dai
-        // the total collateral pool is worth 17 dai
-        // the total outstanding debt is 20 dai
-        // each dai should get (15/2)/20 gold and (2/2)/20 coal
+        // the gold is worth 15 usdv and the coal is worth 2 usdv
+        // the total collateral pool is worth 17 usdv
+        // the total outstanding debt is 20 usdv
+        // each usdv should get (15/2)/20 gold and (2/2)/20 coal
         assertEq(end.fix("gold"), ray(0.375 ether));
         assertEq(end.fix("coal"), ray(0.050 ether));
 
@@ -861,7 +861,7 @@ contract EndTest is DSTest {
         address urn1 = address(ali);
         gold.gemA.join(urn1, 500_000 ether);
         ali.frob("gold", urn1, urn1, urn1, 500_000 ether, 1_000_000 ether);
-        // ali's urn has 500_000 ink, 10^6 art (and 10^6 dai since rate == RAY)
+        // ali's urn has 500_000 ink, 10^6 art (and 10^6 usdv since rate == RAY)
 
         // global checks:
         assertEq(vat.debt(), rad(1_000_000 ether));
@@ -921,7 +921,7 @@ contract EndTest is DSTest {
         assertTrue(err < WAD / 100_000_000);  // Error no more than one part in a hundred million
     }
     uint256 constant MIN_DEBT   = 10**6 * RAD;  // Minimum debt for fuzz runs
-    uint256 constant REDEEM_AMT = 1_000 * WAD;  // Amount of DAI to redeem for error checking
+    uint256 constant REDEEM_AMT = 1_000 * WAD;  // Amount of USDV to redeem for error checking
     function test_fuzz_fix_calcs_0_1(uint256 col_seed, uint192 debt_seed) public {
         uint256 col = col_seed % (115792 * WAD);  // somewhat biased, but not enough to matter
         if (col < 10**12) col += 10**12;  // At least 10^-6 WAD units of collateral; this makes the fixes almost always non-zero.
@@ -931,7 +931,7 @@ contract EndTest is DSTest {
         uint256 fix0 = fix_calc_0(col, debt);
         uint256 fix1 = fix_calc_1(col, debt);
 
-        // how much collateral can be obtained with a single DAI in each case
+        // how much collateral can be obtained with a single USDV in each case
         uint256 col0 = rmul(REDEEM_AMT, fix0);
         uint256 col1 = rmul(REDEEM_AMT, fix1);
 
@@ -947,7 +947,7 @@ contract EndTest is DSTest {
         uint256 fix0 = fix_calc_0(col, debt);
         uint256 fix2 = fix_calc_2(col, debt);
 
-        // how much collateral can be obtained with a single DAI in each case
+        // how much collateral can be obtained with a single USDV in each case
         uint256 col0 = rmul(REDEEM_AMT, fix0);
         uint256 col2 = rmul(REDEEM_AMT, fix2);
 
@@ -963,7 +963,7 @@ contract EndTest is DSTest {
         uint256 fix1 = fix_calc_1(col, debt);
         uint256 fix2 = fix_calc_2(col, debt);
 
-        // how much collateral can be obtained with a single DAI in each case
+        // how much collateral can be obtained with a single USDV in each case
         uint256 col1 = rmul(REDEEM_AMT, fix1);
         uint256 col2 = rmul(REDEEM_AMT, fix2);
 

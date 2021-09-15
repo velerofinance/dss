@@ -49,7 +49,7 @@ interface VatLike {
 
       - `ETHJoin`: For native Ether.
 
-      - `DaiJoin`: For connecting internal Dai balances to an external
+      - `USDVJoin`: For connecting internal USDV balances to an external
                    `DSToken` implementation.
 
     In practice, adapter implementations will be varied and specific to
@@ -103,25 +103,25 @@ contract GemJoin {
     }
 }
 
-contract DaiJoin {
+contract USDVJoin {
     // --- Auth ---
     mapping (address => uint) public wards;
     function rely(address usr) external auth { wards[usr] = 1; }
     function deny(address usr) external auth { wards[usr] = 0; }
     modifier auth {
-        require(wards[msg.sender] == 1, "DaiJoin/not-authorized");
+        require(wards[msg.sender] == 1, "USDVJoin/not-authorized");
         _;
     }
 
     VatLike public vat;      // CDP Engine
-    DSTokenLike public dai;  // Stablecoin Token
+    DSTokenLike public usdv;  // Stablecoin Token
     uint    public live;     // Active Flag
 
-    constructor(address vat_, address dai_) public {
+    constructor(address vat_, address usdv_) public {
         wards[msg.sender] = 1;
         live = 1;
         vat = VatLike(vat_);
-        dai = DSTokenLike(dai_);
+        usdv = DSTokenLike(usdv_);
     }
     function cage() external auth {
         live = 0;
@@ -132,11 +132,11 @@ contract DaiJoin {
     }
     function join(address usr, uint wad) external {
         vat.move(address(this), usr, mul(ONE, wad));
-        dai.burn(msg.sender, wad);
+        usdv.burn(msg.sender, wad);
     }
     function exit(address usr, uint wad) external {
-        require(live == 1, "DaiJoin/not-live");
+        require(live == 1, "USDVJoin/not-live");
         vat.move(msg.sender, address(this), mul(ONE, wad));
-        dai.mint(usr, wad);
+        usdv.mint(usr, wad);
     }
 }
