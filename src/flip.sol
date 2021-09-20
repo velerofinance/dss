@@ -34,7 +34,7 @@ interface CatLike {
 
 /*
    This thing lets you flip some gems for a given amount of usdv.
-   Once the given amount of USDV is raised, gems are forgone instead.
+   Once the given amount of usdv is raised, gems are forgone instead.
 
  - `lot` gems in return for bid
  - `tab` total USDV wanted
