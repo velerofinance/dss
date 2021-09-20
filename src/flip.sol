@@ -33,7 +33,7 @@ interface CatLike {
 }
 
 /*
-   This thing lets you flip some gems for a given amount of USDV.
+   This thing lets you flip some gems for a given amount of usdv.
    Once the given amount of USDV is raised, gems are forgone instead.
 
  - `lot` gems in return for bid
