@@ -21,7 +21,7 @@ pragma solidity >=0.5.12;
 
 import "ds-test/test.sol";
 
-import "../dai.sol";
+import "../usdv.sol";
 
 contract TokenUser {
     Token  token;

@@ -118,8 +118,8 @@ contract EndTest is DSTest {
     function min(uint x, uint y) internal pure returns (uint z) {
         (x >= y) ? z = y : z = x;
     }
-    function dai(address urn) internal view returns (uint) {
-        return vat.dai(urn) / RAY;
+    function usdv(address urn) internal view returns (uint) {
+        return vat.usdv(urn) / RAY;
     }
     function gem(bytes32 ilk, address urn) internal view returns (uint) {
         return vat.gem(ilk, urn);
@@ -329,7 +329,7 @@ contract EndTest is DSTest {
         ali.cash("gold", 15 ether);
 
         // local checks:
-        assertEq(dai(urn1), 0);
+        assertEq(usdv(urn1), 0);
         assertEq(gem("gold", urn1), 3 ether);
         ali.exit(gold.gemA, address(this), 3 ether);
 
@@ -402,7 +402,7 @@ contract EndTest is DSTest {
         ali.cash("gold", 15 ether);
 
         // local checks:
-        assertEq(dai(urn1), 0);
+        assertEq(usdv(urn1), 0);
         uint256 fix = end.fix("gold");
         assertEq(gem("gold", urn1), rmul(fix, 15 ether));
         ali.exit(gold.gemA, address(this), rmul(fix, 15 ether));
@@ -419,7 +419,7 @@ contract EndTest is DSTest {
         bob.cash("gold", 3 ether);
 
         // local checks:
-        assertEq(dai(urn2), 0);
+        assertEq(usdv(urn2), 0);
         assertEq(gem("gold", urn2), rmul(fix, 3 ether));
         bob.exit(gold.gemA, address(this), rmul(fix, 3 ether));
 
@@ -450,7 +450,7 @@ contract EndTest is DSTest {
         vat.hope(address(gold.flip));
         (,uint lot,,,,,,) = gold.flip.bids(auction);
         gold.flip.tend(auction, lot, rad(1 ether)); // bid 1 usdv
-        assertEq(dai(urn1), 14 ether);
+        assertEq(usdv(urn1), 14 ether);
 
         // collateral price is 5
         gold.pip.poke(bytes32(5 * WAD));
@@ -458,7 +458,7 @@ contract EndTest is DSTest {
         end.cage("gold");
 
         end.skip("gold", auction);
-        assertEq(dai(address(this)), 1 ether);       // bid refunded
+        assertEq(usdv(address(this)), 1 ether);       // bid refunded
         vat.move(address(this), urn1, rad(1 ether)); // return 1 usdv to ali
 
         end.skim("gold", urn1);
@@ -469,7 +469,7 @@ contract EndTest is DSTest {
         assertEq(vat.sin(address(vow)), rad(30 ether));
 
         // balance the vow
-        vow.heal(min(vat.dai(address(vow)), vat.sin(address(vow))));
+        vow.heal(min(vat.usdv(address(vow)), vat.sin(address(vow))));
         // global checks:
         assertEq(vat.debt(), rad(15 ether));
         assertEq(vat.vice(), rad(15 ether));
@@ -497,7 +497,7 @@ contract EndTest is DSTest {
         ali.cash("gold", 15 ether);
 
         // local checks:
-        assertEq(dai(urn1), 0);
+        assertEq(usdv(urn1), 0);
         assertEq(gem("gold", urn1), 3 ether);
         ali.exit(gold.gemA, address(this), 3 ether);
 
@@ -565,7 +565,7 @@ contract EndTest is DSTest {
         assertEq(vat.sin(address(vow)),        art1 * rate); // From grab in dog.bark()
         assertEq(vat.vice(),                   art1 * rate); // From grab in dog.bark()
         assertEq(vat.debt(),                   art1 * rate); // From frob
-        assertEq(vat.dai(address(vow)),                  0); // vat.suck() hasn't been called
+        assertEq(vat.usdv(address(vow)),                  0); // vat.suck() hasn't been called
 
         end.snip("gold", id);
 
@@ -591,7 +591,7 @@ contract EndTest is DSTest {
         assertEq(vat.sin(address(vow)),       art1 * rate); // From grab in dog.bark()
         assertEq(vat.vice(),                  art1 * rate); // From grab in dog.bark()
         assertEq(vat.debt(),           tab1 + art1 * rate); // From frob and suck
-        assertEq(vat.dai(address(vow)),              tab1); // From vat.suck()
+        assertEq(vat.usdv(address(vow)),              tab1); // From vat.suck()
         assertEq(end.Art("gold") * rate,             tab1); // Incrementing total Art in End
 
         (uint ink3, uint art3) = vat.urns("gold", urn1);    // CDP after snip
@@ -656,7 +656,7 @@ contract EndTest is DSTest {
         ali.cash("gold", 16 ether);
 
         // local checks:
-        assertEq(dai(urn1), 0);
+        assertEq(usdv(urn1), 0);
         assertEq(gem("gold", urn1), 3 ether);
         ali.exit(gold.gemA, address(this), 3 ether);
 
@@ -734,7 +734,7 @@ contract EndTest is DSTest {
         ali.cash("gold", 14 ether);
 
         // local checks:
-        assertEq(dai(urn1), 0);
+        assertEq(usdv(urn1), 0);
         uint256 fix = end.fix("gold");
         assertEq(gem("gold", urn1), rmul(fix, 14 ether));
         ali.exit(gold.gemA, address(this), rmul(fix, 14 ether));
@@ -751,7 +751,7 @@ contract EndTest is DSTest {
         bob.cash("gold", 3 ether);
 
         // local checks:
-        assertEq(dai(urn2), 0);
+        assertEq(usdv(urn2), 0);
         assertEq(gem("gold", urn2), rmul(fix, 3 ether));
         bob.exit(gold.gemA, address(this), rmul(fix, 3 ether));
 

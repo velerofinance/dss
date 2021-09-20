@@ -22,7 +22,7 @@
 pragma solidity >=0.6.12;
 
 interface VatLike {
-    function dai(address) external view returns (uint256);  // TODO ХЗ менять или нет
+    function usdv(address) external view returns (uint256);
     function ilks(bytes32 ilk) external returns (
         uint256 Art,   // [wad]
         uint256 rate,  // [ray]
@@ -410,7 +410,7 @@ contract End {
     function thaw() external {
         require(live == 0, "End/still-live");
         require(debt == 0, "End/debt-not-zero");
-        require(vat.dai(address(vow)) == 0, "End/surplus-not-zero");
+        require(vat.usdv(address(vow)) == 0, "End/surplus-not-zero");
         require(block.timestamp >= add(when, wait), "End/wait-not-finished");
         debt = vat.debt();
         emit Thaw();

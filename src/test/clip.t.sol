@@ -311,9 +311,9 @@ contract ClipperTest is DSTest {
         assertEq(top, ray(5 ether)); // $4 plus 25%
 
         assertEq(vat.gem(ilk, ali), 0);
-        assertEq(vat.dai(ali), rad(1000 ether));
+        assertEq(vat.usdv(ali), rad(1000 ether));
         assertEq(vat.gem(ilk, bob), 0);
-        assertEq(vat.dai(bob), rad(1000 ether));
+        assertEq(vat.usdv(bob), rad(1000 ether));
 
         _;
     }
@@ -388,10 +388,10 @@ contract ClipperTest is DSTest {
         vat.rely(address(clip));
 
         assertEq(vat.gem(ilk, me), 1000 ether);
-        assertEq(vat.dai(me), 0);
+        assertEq(vat.usdv(me), 0);
         vat.frob(ilk, me, me, me, 40 ether, 100 ether);
         assertEq(vat.gem(ilk, me), 960 ether);
-        assertEq(vat.dai(me), rad(100 ether));
+        assertEq(vat.usdv(me), rad(100 ether));
 
         pip.poke(bytes32(uint256(4 ether))); // Spot = $2
         spot.poke(ilk);          // Now unsafe
@@ -443,7 +443,7 @@ contract ClipperTest is DSTest {
         assertEq(uint256(tic), 0);
         assertEq(top, 0);
         assertEq(vat.gem(ilk, me), 960 ether);
-        assertEq(vat.dai(ali), rad(1000 ether));
+        assertEq(vat.usdv(ali), rad(1000 ether));
         (ink, art) = vat.urns(ilk, me);
         assertEq(ink, 40 ether);
         assertEq(art, 100 ether);
@@ -459,7 +459,7 @@ contract ClipperTest is DSTest {
         assertEq(uint256(tic), now);
         assertEq(top, ray(4 ether));
         assertEq(vat.gem(ilk, me), 960 ether);
-        assertEq(vat.dai(ali), rad(1100 ether)); // Paid "tip" amount of USDV for calling bark()
+        assertEq(vat.usdv(ali), rad(1100 ether)); // Paid "tip" amount of USDV for calling bark()
         (ink, art) = vat.urns(ilk, me);
         assertEq(ink, 0 ether);
         assertEq(art, 0 ether);
@@ -487,7 +487,7 @@ contract ClipperTest is DSTest {
         clip.file("tip",  rad(100 ether)); // Flat fee of 100 USDV
         clip.file("chip", 0.02 ether);     // Linear increase of 2% of tab
 
-        assertEq(vat.dai(bob), rad(1000 ether));
+        assertEq(vat.usdv(bob), rad(1000 ether));
 
         Guy(bob).bark(dog, ilk, me, address(bob));
 
@@ -504,7 +504,7 @@ contract ClipperTest is DSTest {
         assertEq(ink, 0 ether);
         assertEq(art, 0 ether);
 
-        assertEq(vat.dai(bob), rad(1000 ether) + rad(100 ether) + tab * 0.02 ether / WAD); // Paid (tip + due * chip) amount of USDV for calling bark()
+        assertEq(vat.usdv(bob), rad(1000 ether) + rad(100 ether) + tab * 0.02 ether / WAD); // Paid (tip + due * chip) amount of USDV for calling bark()
     }
 
     function testFail_kick_zero_price() public {
@@ -863,7 +863,7 @@ contract ClipperTest is DSTest {
         });
 
         assertEq(vat.gem(ilk, ali), 22 ether);  // Didn't take whole lot
-        assertEq(vat.dai(ali), rad(890 ether)); // Didn't pay more than tab (110)
+        assertEq(vat.usdv(ali), rad(890 ether)); // Didn't pay more than tab (110)
         assertEq(vat.gem(ilk, me),  978 ether); // 960 + (40 - 22) returned to usr
 
         // Assert auction ends
@@ -891,7 +891,7 @@ contract ClipperTest is DSTest {
         });
 
         assertEq(vat.gem(ilk, ali), 22 ether);  // Didn't take whole lot
-        assertEq(vat.dai(ali), rad(890 ether)); // Paid full tab (110)
+        assertEq(vat.usdv(ali), rad(890 ether)); // Paid full tab (110)
         assertEq(vat.gem(ilk, me), 978 ether);  // 960 + (40 - 22) returned to usr
 
         // Assert auction ends
@@ -919,7 +919,7 @@ contract ClipperTest is DSTest {
         });
 
         assertEq(vat.gem(ilk, ali), 11 ether);  // Didn't take whole lot
-        assertEq(vat.dai(ali), rad(945 ether)); // Paid half tab (55)
+        assertEq(vat.usdv(ali), rad(945 ether)); // Paid half tab (55)
         assertEq(vat.gem(ilk, me), 960 ether);  // Collateral not returned (yet)
 
         // Assert auction DOES NOT end
@@ -948,7 +948,7 @@ contract ClipperTest is DSTest {
         });
 
         assertEq(vat.gem(ilk, ali), 40 ether);  // Took entire lot
-        assertTrue(sub(vat.dai(ali), rad(900 ether)) < rad(0.1 ether));  // Paid about 100 ether
+        assertTrue(sub(vat.usdv(ali), rad(900 ether)) < rad(0.1 ether));  // Paid about 100 ether
         assertEq(vat.gem(ilk, me), 960 ether);  // Collateral not returned
 
         // Assert auction ends
@@ -1082,7 +1082,7 @@ contract ClipperTest is DSTest {
         });
 
         assertEq(vat.gem(ilk, ali), 10 ether);  // Didn't take whole lot
-        assertEq(vat.dai(ali), rad(950 ether)); // Paid some tab (50)
+        assertEq(vat.usdv(ali), rad(950 ether)); // Paid some tab (50)
         assertEq(vat.gem(ilk, me), 960 ether);  // Collateral not returned (yet)
 
         // Assert auction DOES NOT end
@@ -1116,7 +1116,7 @@ contract ClipperTest is DSTest {
 
         uint256 expectedGem = (RAY * 60 ether) / _price;  // tab / price
         assertEq(vat.gem(ilk, bob), expectedGem);         // Didn't take whole lot
-        assertEq(vat.dai(bob), rad(940 ether));           // Paid rest of tab (60)
+        assertEq(vat.usdv(bob), rad(940 ether));           // Paid rest of tab (60)
 
         uint256 lotReturn = 30 ether - expectedGem;         // lot - loaf.tab / max = 15
         assertEq(vat.gem(ilk, me), 960 ether + lotReturn);  // Collateral returned (10 WAD)
@@ -1366,17 +1366,17 @@ contract ClipperTest is DSTest {
 
         hevm.warp(now + 300);
         clip.redo(1, address(123));
-        assertEq(vat.dai(address(123)), clip.tip());
+        assertEq(vat.usdv(address(123)), clip.tip());
 
         clip.file("chip", 0.02 ether);     // Reward 2% of tab
         hevm.warp(now + 300);
         clip.redo(1, address(234));
-        assertEq(vat.dai(address(234)), clip.tip() + clip.chip() * tab / WAD);
+        assertEq(vat.usdv(address(234)), clip.tip() + clip.chip() * tab / WAD);
 
         clip.file("tip", 0); // No more flat fee
         hevm.warp(now + 300);
         clip.redo(1, address(345));
-        assertEq(vat.dai(address(345)), clip.chip() * tab / WAD);
+        assertEq(vat.usdv(address(345)), clip.chip() * tab / WAD);
 
         vat.file(ilk, "dust", rad(100 ether) + 1); // ensure wmul(dust, chop) > 110 USDV (tab)
         clip.upchost();
@@ -1384,7 +1384,7 @@ contract ClipperTest is DSTest {
 
         hevm.warp(now + 300);
         clip.redo(1, address(456));
-        assertEq(vat.dai(address(456)), 0);
+        assertEq(vat.usdv(address(456)), 0);
 
         // Set dust so that wmul(dust, chop) is well below tab to check the dusty lot case.
         vat.file(ilk, "dust", rad(20 ether)); // $20 dust
@@ -1413,7 +1413,7 @@ contract ClipperTest is DSTest {
 
         hevm.warp(now + 300);
         clip.redo(1, address(567));
-        assertEq(vat.dai(address(567)), 0);
+        assertEq(vat.usdv(address(567)), 0);
     }
 
     function test_incentive_max_values() public {
@@ -1516,7 +1516,7 @@ contract ClipperTest is DSTest {
         pclip.active(9); // Fail because id is out of range
     }
 
-    function testFail_not_enough_dai() public takeSetup {
+    function testFail_not_enough_usdv() public takeSetup {
         Guy(che).take({
             id:  1,
             amt: 25 ether,
@@ -1527,7 +1527,7 @@ contract ClipperTest is DSTest {
     }
 
     function test_flashsale() public takeSetup {
-        assertEq(vat.dai(che), 0);
+        assertEq(vat.usdv(che), 0);
         assertEq(usdv.balanceOf(che), 0);
         Guy(che).take({
             id:  1,
@@ -1536,7 +1536,7 @@ contract ClipperTest is DSTest {
             who: address(che),
             data: "hey"
         });
-        assertEq(vat.dai(che), 0);
+        assertEq(vat.usdv(che), 0);
         assertTrue(usdv.balanceOf(che) > 0); // Che turned a profit
     }
 
@@ -1650,7 +1650,7 @@ contract ClipperTest is DSTest {
         assertEq(uint256(tic), 0);
         assertEq(top, 0);
         assertEq(vat.gem(ilk, me), 960 ether);
-        assertEq(vat.dai(ali), rad(1000 ether));
+        assertEq(vat.usdv(ali), rad(1000 ether));
         (uint256 ink, uint256 art) = vat.urns(ilk, me);
         assertEq(ink, 40 ether);
         assertEq(art, 100 ether);
@@ -1675,7 +1675,7 @@ contract ClipperTest is DSTest {
         log_named_uint("partial take gas", diffGas);
 
         assertEq(vat.gem(ilk, ali), 11 ether);  // Didn't take whole lot
-        assertEq(vat.dai(ali), rad(945 ether)); // Paid half tab (55)
+        assertEq(vat.usdv(ali), rad(945 ether)); // Paid half tab (55)
         assertEq(vat.gem(ilk, me), 960 ether);  // Collateral not returned (yet)
 
         // Assert auction DOES NOT end
@@ -1703,7 +1703,7 @@ contract ClipperTest is DSTest {
         log_named_uint("full take gas", diffGas);
 
         assertEq(vat.gem(ilk, ali), 22 ether);  // Didn't take whole lot
-        assertEq(vat.dai(ali), rad(890 ether)); // Didn't pay more than tab (110)
+        assertEq(vat.usdv(ali), rad(890 ether)); // Didn't pay more than tab (110)
         assertEq(vat.gem(ilk, me),  978 ether); // 960 + (40 - 22) returned to usr
 
         // Assert auction ends

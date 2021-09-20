@@ -66,7 +66,7 @@ adapter for native velas and *also* for WVLX.
 ## The USDV Token
 
 The fundamental state of a USDV balance is given by the balance in the
-core (`vat.dai`, sometimes referred to as `D`).
+core (`vat.usdv`, sometimes referred to as `D`).
 
 Given this, there are a number of ways to implement the USDV that is used
 outside of the system, with different trade offs.
