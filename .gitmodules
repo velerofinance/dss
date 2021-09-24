@@ -1,9 +1,9 @@
 [submodule "lib/ds-test"]
 	path = lib/ds-test
-	url = https://github.com/dapphub/ds-test
+	url = https://github.com/velerofinance/ds-test
 [submodule "lib/ds-value"]
 	path = lib/ds-value
-	url = https://github.com/dapphub/ds-value
+	url = https://github.com/velerofinance/ds-value
 [submodule "lib/ds-token"]
 	path = lib/ds-token
-	url = https://github.com/dapphub/ds-token
+	url = https://github.com/velerofinance/ds-token

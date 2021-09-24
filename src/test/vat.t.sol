@@ -9,7 +9,7 @@ import {Vat} from '../vat.sol';
 import {Cat} from '../cat.sol';
 import {Vow} from '../vow.sol';
 import {Jug} from '../jug.sol';
-import {GemJoin, DaiJoin} from '../join.sol';
+import {GemJoin, USDVJoin} from '../join.sol';
 
 import {Flipper} from './flip.t.sol';
 import {Flopper} from './flop.t.sol';
@@ -24,7 +24,7 @@ interface Hevm {
 contract TestVat is Vat {
     uint256 constant ONE = 10 ** 27;
     function mint(address usr, uint wad) public {
-        dai[usr] += wad * ONE;
+        usdv[usr] += wad * ONE;
         debt += wad * ONE;
     }
 }
@@ -38,7 +38,7 @@ contract TestVow is Vow {
     }
     // Total surplus
     function Joy() public view returns (uint) {
-        return vat.dai(address(this));
+        return vat.usdv(address(this));
     }
     // Unqueued, pre-auction debt
     function Woe() public view returns (uint) {
@@ -278,7 +278,7 @@ contract FrobTest is DSTest {
         assertTrue( ali.can_frob("gold", a, a, a,  0 ether, -1 ether));
         assertTrue( bob.can_frob("gold", a, b, b,  0 ether, -1 ether));
         assertTrue( che.can_frob("gold", a, c, c,  0 ether, -1 ether));
-        // but only with their own dai
+        // but only with their own usdv
         assertTrue(!ali.can_frob("gold", a, a, b,  0 ether, -1 ether));
         assertTrue(!bob.can_frob("gold", a, b, c,  0 ether, -1 ether));
         assertTrue(!che.can_frob("gold", a, c, a,  0 ether, -1 ether));
@@ -326,22 +326,22 @@ contract JoinTest is DSTest {
     TestVat vat;
     DSToken gem;
     GemJoin gemA;
-    DaiJoin daiA;
-    DSToken dai;
+    USDVJoin usdvA;
+    DSToken usdv;
     address me;
 
     function setUp() public {
         vat = new TestVat();
-        vat.init("eth");
+        vat.init("vlx");
 
         gem  = new DSToken("Gem");
         gemA = new GemJoin(address(vat), "gem", address(gem));
         vat.rely(address(gemA));
 
-        dai  = new DSToken("Dai");
-        daiA = new DaiJoin(address(vat), address(dai));
-        vat.rely(address(daiA));
-        dai.setOwner(address(daiA));
+        usdv  = new DSToken("USDV");
+        usdvA = new USDVJoin(address(vat), address(usdv));
+        vat.rely(address(usdvA));
+        usdv.setOwner(address(usdvA));
 
         me = address(this);
     }
@@ -353,9 +353,9 @@ contract JoinTest is DSTest {
         string memory sig = "join(address,uint256)";
         (ok,) = address(gemA).call(abi.encodeWithSignature(sig, usr, wad));
     }
-    function try_exit_dai(address usr, uint wad) public returns (bool ok) {
+    function try_exit_usdv(address usr, uint wad) public returns (bool ok) {
         string memory sig = "exit(address,uint256)";
-        (ok,) = address(daiA).call(abi.encodeWithSignature(sig, usr, wad));
+        (ok,) = address(usdvA).call(abi.encodeWithSignature(sig, usr, wad));
     }
     function test_gem_join() public {
         gem.mint(20 ether);
@@ -369,33 +369,33 @@ contract JoinTest is DSTest {
     function rad(uint wad) internal pure returns (uint) {
         return wad * 10 ** 27;
     }
-    function test_dai_exit() public {
+    function test_usdv_exit() public {
         address urn = address(this);
         vat.mint(address(this), 100 ether);
-        vat.hope(address(daiA));
-        assertTrue( try_exit_dai(urn, 40 ether));
-        assertEq(dai.balanceOf(address(this)), 40 ether);
-        assertEq(vat.dai(me),              rad(60 ether));
-        assertTrue( try_cage(address(daiA)));
-        assertTrue(!try_exit_dai(urn, 40 ether));
-        assertEq(dai.balanceOf(address(this)), 40 ether);
-        assertEq(vat.dai(me),              rad(60 ether));
+        vat.hope(address(usdvA));
+        assertTrue( try_exit_usdv(urn, 40 ether));
+        assertEq(usdv.balanceOf(address(this)), 40 ether);
+        assertEq(vat.usdv(me),              rad(60 ether));
+        assertTrue( try_cage(address(usdvA)));
+        assertTrue(!try_exit_usdv(urn, 40 ether));
+        assertEq(usdv.balanceOf(address(this)), 40 ether);
+        assertEq(vat.usdv(me),              rad(60 ether));
     }
-    function test_dai_exit_join() public {
+    function test_usdv_exit_join() public {
         address urn = address(this);
         vat.mint(address(this), 100 ether);
-        vat.hope(address(daiA));
-        daiA.exit(urn, 60 ether);
-        dai.approve(address(daiA), uint(-1));
-        daiA.join(urn, 30 ether);
-        assertEq(dai.balanceOf(address(this)),     30 ether);
-        assertEq(vat.dai(me),                  rad(70 ether));
+        vat.hope(address(usdvA));
+        usdvA.exit(urn, 60 ether);
+        usdv.approve(address(usdvA), uint(-1));
+        usdvA.join(urn, 30 ether);
+        assertEq(usdv.balanceOf(address(this)),     30 ether);
+        assertEq(vat.usdv(me),                  rad(70 ether));
     }
     function test_cage_no_access() public {
         gemA.deny(address(this));
         assertTrue(!try_cage(address(gemA)));
-        daiA.deny(address(this));
-        assertTrue(!try_cage(address(daiA)));
+        usdvA.deny(address(this));
+        assertTrue(!try_cage(address(usdvA)));
     }
 }
 
@@ -607,15 +607,15 @@ contract BiteTest is DSTest {
         assertEq(vow.sin(now),   rad(100 ether));
         assertEq(gem("gold", address(this)), 960 ether);
 
-        assertEq(vat.dai(address(vow)), rad(0 ether));
-        vat.mint(address(this), 100 ether);  // magic up some dai for bidding
+        assertEq(vat.usdv(address(vow)), rad(0 ether));
+        vat.mint(address(this), 100 ether);  // magic up some usdv for bidding
         flip.tend(auction, 40 ether,   rad(1 ether));
         flip.tend(auction, 40 ether, rad(110 ether));
 
-        assertEq(vat.dai(address(this)),  rad(90 ether));
+        assertEq(vat.usdv(address(this)),  rad(90 ether));
         assertEq(gem("gold", address(this)), 960 ether);
         flip.dent(auction, 38 ether,  rad(110 ether));
-        assertEq(vat.dai(address(this)),  rad(90 ether));
+        assertEq(vat.usdv(address(this)),  rad(90 ether));
         assertEq(gem("gold", address(this)), 962 ether);
         assertEq(vow.sin(now),     rad(100 ether));
 
@@ -623,7 +623,7 @@ contract BiteTest is DSTest {
         assertEq(cat.litter(), rad(110 ether));
         flip.deal(auction);
         assertEq(cat.litter(), 0);
-        assertEq(vat.dai(address(vow)),  rad(110 ether));
+        assertEq(vat.usdv(address(vow)),  rad(110 ether));
     }
 
     // tests a partial lot liquidation because it would fill the literbox
@@ -652,18 +652,18 @@ contract BiteTest is DSTest {
         assertEq(vow.sin(now), rad(75 ether));
         assertEq(gem("gold", address(this)), 900 ether);
 
-        assertEq(vat.dai(address(this)),  rad(150 ether));
-        assertEq(vat.dai(address(vow)),     rad(0 ether));
+        assertEq(vat.usdv(address(this)),  rad(150 ether));
+        assertEq(vat.usdv(address(vow)),     rad(0 ether));
         flip.tend(auction, 50 ether, rad(1 ether));
         assertEq(cat.litter(), rad(75 ether));
-        assertEq(vat.dai(address(this)), rad(149 ether));
+        assertEq(vat.usdv(address(this)), rad(149 ether));
         flip.tend(auction, 50 ether, rad(75 ether));
-        assertEq(vat.dai(address(this)), rad(75 ether));
+        assertEq(vat.usdv(address(this)), rad(75 ether));
 
         assertEq(gem("gold", address(this)),  900 ether);
         flip.dent(auction, 25 ether, rad(75 ether));
         assertEq(cat.litter(), rad(75 ether));
-        assertEq(vat.dai(address(this)), rad(75 ether));
+        assertEq(vat.usdv(address(this)), rad(75 ether));
         assertEq(gem("gold", address(this)), 925 ether);
         assertEq(vow.sin(now), rad(75 ether));
 
@@ -671,8 +671,8 @@ contract BiteTest is DSTest {
         flip.deal(auction);
         assertEq(cat.litter(), 0);
         assertEq(gem("gold", address(this)),  950 ether);
-        assertEq(vat.dai(address(this)),   rad(75 ether));
-        assertEq(vat.dai(address(vow)),    rad(75 ether));
+        assertEq(vat.usdv(address(this)),   rad(75 ether));
+        assertEq(vat.usdv(address(vow)),    rad(75 ether));
     }
 
     // tests a partial lot liquidation because it would fill the literbox
@@ -700,7 +700,7 @@ contract BiteTest is DSTest {
         jug.drip("gold");
         (, uint rate,,,) = vat.ilks("gold");
 
-        uint vowBalance = vat.dai(address(vow)); // Balance updates after vat.fold is called from jug
+        uint vowBalance = vat.usdv(address(vow)); // Balance updates after vat.fold is called from jug
 
         cat.file("box", rad(75 ether));
         cat.file("gold", "dunk", rad(100 ether));
@@ -720,18 +720,18 @@ contract BiteTest is DSTest {
         assertEq(vow.sin(now), dart * rate);               
         assertEq(gem("gold", address(this)), 900 ether);
 
-        assertEq(vat.dai(address(this)), rad(150 ether));
-        assertEq(vat.dai(address(vow)),  vowBalance);
+        assertEq(vat.usdv(address(this)), rad(150 ether));
+        assertEq(vat.usdv(address(vow)),  vowBalance);
         flip.tend(auction, dink, rad( 1 ether));
         assertEq(cat.litter(), tab);
-        assertEq(vat.dai(address(this)), rad(149 ether));
+        assertEq(vat.usdv(address(this)), rad(149 ether));
         flip.tend(auction, dink, tab);
-        assertEq(vat.dai(address(this)), rad(150 ether) - tab);
+        assertEq(vat.usdv(address(this)), rad(150 ether) - tab);
 
         assertEq(gem("gold", address(this)),  900 ether);
         flip.dent(auction, 25 ether, tab);
         assertEq(cat.litter(), tab);
-        assertEq(vat.dai(address(this)), rad(150 ether) - tab);
+        assertEq(vat.usdv(address(this)), rad(150 ether) - tab);
         assertEq(gem("gold", address(this)), 900 ether + (dink - 25 ether));
         assertEq(vow.sin(now), dart * rate);
 
@@ -739,8 +739,8 @@ contract BiteTest is DSTest {
         flip.deal(auction);
         assertEq(cat.litter(), 0);
         assertEq(gem("gold", address(this)),  900 ether + dink); // (flux another 25 wad into gem)
-        assertEq(vat.dai(address(this)), rad(150 ether) - tab);  
-        assertEq(vat.dai(address(vow)),  vowBalance + tab);
+        assertEq(vat.usdv(address(this)), rad(150 ether) - tab);
+        assertEq(vat.usdv(address(vow)),  vowBalance + tab);
     }
 
     // tests a partial lot liquidation that fill litterbox
@@ -846,18 +846,18 @@ contract BiteTest is DSTest {
         assertEq(vow.sin(now), rad(75 ether));
         assertEq(gem("gold", address(this)), 900 ether);
 
-        assertEq(vat.dai(address(this)), rad(150 ether));
-        assertEq(vat.dai(address(vow)),    rad(0 ether));
+        assertEq(vat.usdv(address(this)), rad(150 ether));
+        assertEq(vat.usdv(address(vow)),    rad(0 ether));
         flip.tend(auction, 50 ether, rad( 1 ether));
         assertEq(cat.litter(), rad(75 ether));
-        assertEq(vat.dai(address(this)), rad(149 ether));
+        assertEq(vat.usdv(address(this)), rad(149 ether));
         flip.tend(auction, 50 ether, rad(75 ether));
-        assertEq(vat.dai(address(this)), rad(75 ether));
+        assertEq(vat.usdv(address(this)), rad(75 ether));
 
         assertEq(gem("gold", address(this)),  900 ether);
         flip.dent(auction, 25 ether, rad(75 ether));
         assertEq(cat.litter(), rad(75 ether));
-        assertEq(vat.dai(address(this)), rad(75 ether));
+        assertEq(vat.usdv(address(this)), rad(75 ether));
         assertEq(gem("gold", address(this)), 925 ether);
         assertEq(vow.sin(now), rad(75 ether));
 
@@ -869,8 +869,8 @@ contract BiteTest is DSTest {
         flip.deal(auction);
         assertEq(cat.litter(), 0);
         assertEq(gem("gold", address(this)), 950 ether);
-        assertEq(vat.dai(address(this)),  rad(75 ether));
-        assertEq(vat.dai(address(vow)),   rad(75 ether));
+        assertEq(vat.usdv(address(this)),  rad(75 ether));
+        assertEq(vat.usdv(address(vow)),   rad(75 ether));
 
         // now bite more
         auction = cat.bite("gold", address(this));
@@ -880,18 +880,18 @@ contract BiteTest is DSTest {
         assertEq(vow.sin(now), rad(75 ether));
         assertEq(gem("gold", address(this)), 950 ether);
 
-        assertEq(vat.dai(address(this)), rad(75 ether));
-        assertEq(vat.dai(address(vow)),  rad(75 ether));
+        assertEq(vat.usdv(address(this)), rad(75 ether));
+        assertEq(vat.usdv(address(vow)),  rad(75 ether));
         flip.tend(auction, 50 ether, rad( 1 ether));
         assertEq(cat.litter(), rad(75 ether));
-        assertEq(vat.dai(address(this)), rad(74 ether));
+        assertEq(vat.usdv(address(this)), rad(74 ether));
         flip.tend(auction, 50 ether, rad(75 ether));
-        assertEq(vat.dai(address(this)), 0);
+        assertEq(vat.usdv(address(this)), 0);
 
         assertEq(gem("gold", address(this)),  950 ether);
         flip.dent(auction, 25 ether, rad(75 ether));
         assertEq(cat.litter(), rad(75 ether));
-        assertEq(vat.dai(address(this)), 0);
+        assertEq(vat.usdv(address(this)), 0);
         assertEq(gem("gold", address(this)), 975 ether);
         assertEq(vow.sin(now), rad(75 ether));
 
@@ -899,8 +899,8 @@ contract BiteTest is DSTest {
         flip.deal(auction);
         assertEq(cat.litter(), 0);
         assertEq(gem("gold", address(this)),  1000 ether);
-        assertEq(vat.dai(address(this)), 0);
-        assertEq(vat.dai(address(vow)),  rad(150 ether));
+        assertEq(vat.usdv(address(this)), 0);
+        assertEq(vat.usdv(address(vow)),  rad(150 ether));
     }
 
     function testFail_null_auctions_dart_realistic_values() public {
@@ -1071,20 +1071,20 @@ contract BiteTest is DSTest {
     function test_flappy_bite() public {
         // get some surplus
         vat.mint(address(vow), 100 ether);
-        assertEq(vat.dai(address(vow)),    rad(100 ether));
+        assertEq(vat.usdv(address(vow)),    rad(100 ether));
         assertEq(gov.balanceOf(address(this)), 100 ether);
 
         vow.file("bump", rad(100 ether));
         assertEq(vow.Awe(), 0 ether);
         uint id = vow.flap();
 
-        assertEq(vat.dai(address(this)),     rad(0 ether));
+        assertEq(vat.usdv(address(this)),     rad(0 ether));
         assertEq(gov.balanceOf(address(this)), 100 ether);
         flap.tend(id, rad(100 ether), 10 ether);
         hevm.warp(now + 4 hours);
         gov.setOwner(address(flap));
         flap.deal(id);
-        assertEq(vat.dai(address(this)),     rad(100 ether));
+        assertEq(vat.usdv(address(this)),     rad(100 ether));
         assertEq(gov.balanceOf(address(this)),    90 ether);
     }
 }
@@ -1115,13 +1115,13 @@ contract FoldTest is DSTest {
         vat.file("Line", rad(100 ether));
         vat.file("gold", "line", rad(100 ether));
     }
-    function draw(bytes32 ilk, uint dai) internal {
-        vat.file("Line", rad(dai));
-        vat.file(ilk, "line", rad(dai));
+    function draw(bytes32 ilk, uint usdv) internal {
+        vat.file("Line", rad(usdv));
+        vat.file(ilk, "line", rad(usdv));
         vat.file(ilk, "spot", 10 ** 27 * 10000 ether);
         address self = address(this);
         vat.slip(ilk, self,  10 ** 27 * 1 ether);
-        vat.frob(ilk, self, self, self, int(1 ether), int(dai));
+        vat.frob(ilk, self, self, self, int(1 ether), int(usdv));
     }
     function test_fold() public {
         address self = address(this);
@@ -1131,6 +1131,6 @@ contract FoldTest is DSTest {
         assertEq(tab("gold", self), rad(1.00 ether));
         vat.fold("gold", ali,   int(ray(0.05 ether)));
         assertEq(tab("gold", self), rad(1.05 ether));
-        assertEq(vat.dai(ali),      rad(0.05 ether));
+        assertEq(vat.usdv(ali),      rad(0.05 ether));
     }
 }

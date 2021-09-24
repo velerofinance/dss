@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-/// pot.sol -- Dai Savings Rate
+/// pot.sol -- Usdv Savings Rate
 
 // Copyright (C) 2018 Rain <rainbreak@riseup.net>
 //
@@ -22,20 +22,20 @@ pragma solidity >=0.5.12;
 import "./lib.sol";
 
 /*
-   "Savings Dai" is obtained when Dai is deposited into
-   this contract. Each "Savings Dai" accrues Dai interest
-   at the "Dai Savings Rate".
+   "Savings Usdv" is obtained when Usdv is deposited into
+   this contract. Each "Savings Usdv" accrues Usdv interest
+   at the "Usdv Savings Rate".
 
    This contract does not implement a user tradeable token
    and is intended to be used with adapters.
 
-         --- `save` your `dai` in the `pot` ---
+         --- `save` your `usdv` in the `pot` ---
 
-   - `dsr`: the Dai Savings Rate
-   - `pie`: user balance of Savings Dai
+   - `dsr`: the Usdv Savings Rate
+   - `pie`: user balance of Savings Usdv
 
-   - `join`: start saving some dai
-   - `exit`: remove some dai
+   - `join`: start saving some usdv
+   - `exit`: remove some usdv
    - `drip`: perform rate collection
 
 */
@@ -56,10 +56,10 @@ contract Pot is LibNote {
     }
 
     // --- Data ---
-    mapping (address => uint256) public pie;  // Normalised Savings Dai [wad]
+    mapping (address => uint256) public pie;  // Normalised Savings Usdv [wad]
 
-    uint256 public Pie;   // Total Normalised Savings Dai  [wad]
-    uint256 public dsr;   // The Dai Savings Rate          [ray]
+    uint256 public Pie;   // Total Normalised Savings Usdv  [wad]
+    uint256 public dsr;   // The Usdv Savings Rate          [ray]
     uint256 public chi;   // The Rate Accumulator          [ray]
 
     VatLike public vat;   // CDP Engine
@@ -148,7 +148,7 @@ contract Pot is LibNote {
         vat.suck(address(vow), address(this), mul(Pie, chi_));
     }
 
-    // --- Savings Dai Management ---
+    // --- Savings Usdv Management ---
     function join(uint wad) external note {
         require(now == rho, "Pot/rho-not-updated");
         pie[msg.sender] = add(pie[msg.sender], wad);
