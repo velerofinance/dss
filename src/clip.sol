@@ -1,22 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
-/// clip.sol -- USDV auction module 2.0
-
-// Copyright (C) 2020-2021 Maker Ecosystem Growth Holdings, INC.
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published
-// by the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 pragma solidity >=0.6.12;
 
 interface VatLike {
@@ -48,6 +29,10 @@ interface AbacusLike {
     function price(uint256, uint256) external view returns (uint256);
 }
 
+interface GemLike {
+    function balanceOf(address) external view returns (uint256);
+}
+
 contract Clipper {
     // --- Auth ---
     mapping (address => uint256) public wards;
@@ -55,6 +40,11 @@ contract Clipper {
     function deny(address usr) external auth { wards[usr] = 0; emit Deny(usr); }
     modifier auth {
         require(wards[msg.sender] == 1, "Clipper/not-authorized");
+        _;
+    }
+
+    modifier checkClearance {
+        require(vdgt.balanceOf(msg.sender) >= clearance, "Clipper/not-have-clearance");
         _;
     }
 
@@ -66,13 +56,15 @@ contract Clipper {
     address     public vow;      // Recipient of USDV raised in auctions
     SpotterLike public spotter;  // Collateral price module
     AbacusLike  public calc;     // Current price calculator
+    GemLike     public vdgt;     // Governance token
 
-    uint256 public buf;    // Multiplicative factor to increase starting price                  [ray]
-    uint256 public tail;   // Time elapsed before auction reset                                 [seconds]
-    uint256 public cusp;   // Percentage drop before auction reset                              [ray]
-    uint64  public chip;   // Percentage of tab to suck from vow to incentivize keepers         [wad]
-    uint192 public tip;    // Flat fee to suck from vow to incentivize keepers                  [rad]
-    uint256 public chost;  // Cache the ilk dust times the ilk chop to prevent excessive SLOADs [rad]
+    uint256 public buf;       // Multiplicative factor to increase starting price                                 [ray]
+    uint256 public tail;      // Time elapsed before auction reset                                                [seconds]
+    uint256 public cusp;      // Percentage drop before auction reset                                             [ray]
+    uint64  public chip;      // Percentage of tab to suck from vow to incentivize keepers                        [wad]
+    uint192 public tip;       // Flat fee to suck from vow to incentivize keepers                                 [rad]
+    uint256 public chost;     // Cache the ilk dust times the ilk chop to prevent excessive SLOADs                [rad]
+    uint256 public clearance; // Minimum number of VDGT on the participant's wallet to participate in the auction [wad]
 
     uint256   public kicks;   // Total auctions
     uint256[] public active;  // Array of active auction ids
@@ -121,6 +113,7 @@ contract Clipper {
         uint256 lot,
         address indexed usr
     );
+
     event Redo(
         uint256 indexed id,
         uint256 top,
@@ -134,10 +127,11 @@ contract Clipper {
     event Yank(uint256 id);
 
     // --- Init ---
-    constructor(address vat_, address spotter_, address dog_, bytes32 ilk_) public {
+    constructor(address vat_, address spotter_, address dog_, bytes32 ilk_, address vdgt_) public {
         vat     = VatLike(vat_);
         spotter = SpotterLike(spotter_);
         dog     = DogLike(dog_);
+        vdgt    = GemLike(vdgt_);
         ilk     = ilk_;
         buf     = RAY;
         wards[msg.sender] = 1;
@@ -160,11 +154,12 @@ contract Clipper {
     // --- Administration ---
     function file(bytes32 what, uint256 data) external auth lock {
         if      (what == "buf")         buf = data;
-        else if (what == "tail")       tail = data;           // Time elapsed before auction reset
-        else if (what == "cusp")       cusp = data;           // Percentage drop before auction reset
-        else if (what == "chip")       chip = uint64(data);   // Percentage of tab to incentivize (max: 2^64 - 1 => 18.xxx WAD = 18xx%)
-        else if (what == "tip")         tip = uint192(data);  // Flat fee to incentivize keepers (max: 2^192 - 1 => 6.277T RAD)
-        else if (what == "stopped") stopped = data;           // Set breaker (0, 1, 2, or 3)
+        else if (what == "tail")        tail = data;           // Time elapsed before auction reset
+        else if (what == "cusp")        cusp = data;           // Percentage drop before auction reset
+        else if (what == "chip")        chip = uint64(data);   // Percentage of tab to incentivize (max: 2^64 - 1 => 18.xxx WAD = 18xx%)
+        else if (what == "tip")         tip = uint192(data);   // Flat fee to incentivize keepers (max: 2^192 - 1 => 6.277T RAD)
+        else if (what == "stopped")     stopped = data;        // Set breaker (0, 1, 2, or 3)
+        else if (what == "clearance")   clearance = data;      // Percentage of tab to incentivize (max: 2^64 - 1 => 18.xxx WAD = 18xx%)
         else revert("Clipper/file-unrecognized-param");
         emit File(what, data);
     }
@@ -173,6 +168,7 @@ contract Clipper {
         else if (what == "dog")    dog = DogLike(data);
         else if (what == "vow")    vow = data;
         else if (what == "calc")  calc = AbacusLike(data);
+        else if (what == "vdgt")  vdgt = GemLike(data);
         else revert("Clipper/file-unrecognized-param");
         emit File(what, data);
     }
@@ -308,7 +304,7 @@ contract Clipper {
     }
 
     // Buy up to `amt` of collateral from the auction indexed by `id`.
-    // 
+    //
     // Auctions will not collect more USDV than their assigned USDV target,`tab`;
     // thus, if `amt` would cost more USDV than `tab` at the current price, the
     // amount of collateral purchased will instead be just enough to collect `tab` USDV.
@@ -330,7 +326,7 @@ contract Clipper {
         uint256 max,          // Maximum acceptable price (USDV / collateral) [ray]
         address who,          // Receiver of collateral and external call address
         bytes calldata data   // Data to pass in external call; if length 0, no call is done
-    ) external lock isStopped(3) {
+    ) external lock isStopped(3) checkClearance {
 
         address usr = sales[id].usr;
         uint96  tic = sales[id].tic;
@@ -469,5 +465,13 @@ contract Clipper {
         vat.flux(ilk, address(this), msg.sender, sales[id].lot);
         _remove(id);
         emit Yank(id);
+    }
+}
+
+contract ClipFab {
+    function newClip(address owner, address vat, address spotter, address dog, bytes32 ilk, address gem) public returns (Clipper clip) {
+        clip = new Clipper(vat, spotter, dog, ilk, gem);
+        clip.rely(owner);
+        clip.deny(address(this));
     }
 }
